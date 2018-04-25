@@ -67,8 +67,10 @@ if __name__ == "__main__":
                 elif event.key == pygame.K_UP or event.key == pygame.K_DOWN:
                     y_change = 0
 
-        CHARACTER_RECT.x += x_change if 0 < int(CHARACTER_RECT.x + x_change) <= display_width else 0
-        CHARACTER_RECT.y += y_change if 0 < int(CHARACTER_RECT.y + y_change) <= display_height else 0
+        CHARACTER_RECT.x += x_change if -CHARACTER_RECT.width / 2 < int(
+            CHARACTER_RECT.x + x_change) <= display_width - CHARACTER_RECT.width / 2 else 0
+        CHARACTER_RECT.y += y_change if -CHARACTER_RECT.height / 2 < int(
+            CHARACTER_RECT.y + y_change) <= display_height - CHARACTER_RECT.height / 2 else 0
 
         SURFACE.fill(Colour.WHITE)
         character_idle_position(CHARACTER_RECT)
