@@ -30,6 +30,10 @@ class Projectile(object):
         self._dy = 0
 
     @property
+    def is_destroyed(self):
+        return self._is_destroyed
+
+    @property
     def image(self):
         return self._images[self._orientation]
 
@@ -51,27 +55,20 @@ class Projectile(object):
             return
 
         for rectangle in self._rectangles.values():
-            rectangle.x += self._dx
-            rectangle.y += self._dy
+            rectangle.x += self._dx if self.orientation == Orientation.HORIZONTAL else 0
+            rectangle.y += self._dy if self.orientation == Orientation.VERTICAL else 0
 
-            if rectangle.x > display_width or rectangle.x < 0 or rectangle.y > display_height or rectangle.y < 0:
+            if rectangle.x + rectangle.width/2 < 0 or rectangle.x + rectangle.width/2 > display_width or rectangle.y + rectangle.height/2 < 0 or rectangle.y + rectangle.height/2 > display_height:
                 self._is_destroyed = True
 
     def fire(self, dx, dy):
         self._dx = dx
         self._dy = dy
-        self._change_direction(dx, dy)
         self._is_fired = True
 
     def reflect(self):
         self._dx *= -1
         self._dy *= -1
-
-    def _change_direction(self, dx, dy):
-        if abs(dx) > abs(dy):
-            self._orientation = Orientation.HORIZONTAL
-        elif abs(dx) < abs(dy):
-            self._direction = Orientation.VERTICAL
 
 
 class Wall(object):
@@ -162,13 +159,31 @@ if __name__ == "__main__":
     character_down_img = pygame.transform.smoothscale(pygame.image.load("character_down.png"),
                                                       (int(display_width * 0.1), int(display_height * 0.2)))
 
+    projectile_horizontal = pygame.transform.smoothscale(pygame.image.load("bullet_left_right.png"),
+                                                         (int(display_width * 0.01), int(display_height * 0.02)))
+    projectile_vertical = pygame.transform.smoothscale(pygame.image.load("bullet_up_down.png"),
+                                                       (int(display_width * 0.02), int(display_height * 0.01)))
+
     wall_img = pygame.transform.smoothscale(pygame.image.load("wall.png"),
                                             (int(display_width * 0.2), int(display_height * 0.2)))
+
+
+    def fire_projectile(character):
+        projectile = Projectile(projectile_vertical, projectile_horizontal,
+                                Orientation.VERTICAL if character.direction in [Direction.UP,
+                                                                                Direction.DOWN] else Orientation.HORIZONTAL)
+        projectile.put(character.rectangle.x, character.rectangle.y)
+        projectile.fire(20 if character.direction == Direction.RIGHT else -20,
+                        20 if character.direction == Direction.DOWN else -20)
+        return projectile
+
 
     PLAYER = Character(character_up_img, character_down_img, character_left_img, character_right_img)
     PLAYER.put(display_width * 0.5, display_height * 0.5)
     WALLS = [Wall(wall_img)]
     WALLS[0].put(display_width * 0.2, display_height * 0.2)
+
+    PROJECTILES = []
 
     player_quit = False
     x_change = 0
@@ -193,6 +208,8 @@ if __name__ == "__main__":
                 elif event.key == pygame.K_DOWN:
                     y_change = 5
                     player_direction = Direction.DOWN
+                elif event.key == pygame.K_SPACE:
+                    PROJECTILES.append(fire_projectile(PLAYER))
 
             if event.type == pygame.KEYUP:
                 if event.key == pygame.K_LEFT or event.key == pygame.K_RIGHT:
@@ -201,7 +218,6 @@ if __name__ == "__main__":
                     y_change = 0
 
         collision_detected = not all(map(lambda x: is_move_allowed(PLAYER, x, x_change, y_change), WALLS))
-
         if not collision_detected:
             PLAYER.move(x_change, y_change)
 
@@ -210,6 +226,13 @@ if __name__ == "__main__":
 
         for wall in WALLS:
             SURFACE.blit(wall.image, wall.rectangle)
+
+        for projectile in PROJECTILES:
+            projectile.progress()
+            if projectile.is_destroyed or any(map(lambda x: projectile.rectangle.colliderect(x.rectangle), WALLS)):
+                PROJECTILES.remove(projectile)
+            else:
+                SURFACE.blit(projectile.image, projectile.rectangle)
 
         pygame.display.update()
         clock.tick(60)
