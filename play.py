@@ -24,6 +24,10 @@ class Projectile(object):
         self._rectangles = {Orientation.HORIZONTAL: image_horizontal.get_rect(),
                             Orientation.VERTICAL: image_vertical.get_rect()}
         self._orientation = orientation
+        self._is_fired = False
+        self._is_destroyed = False
+        self._dx = 0
+        self._dy = 0
 
     @property
     def image(self):
@@ -42,13 +46,26 @@ class Projectile(object):
             rectangle.x = x
             rectangle.y = y
 
-    def move(self, dx, dy):
+    def progress(self):
+        if not self._is_fired:
+            return
+
         for rectangle in self._rectangles.values():
-            rectangle.x += x_change if -rectangle.width / 2 < int(
-                rectangle.x + x_change) <= display_width - rectangle.width / 2 else 0
-            rectangle.y += y_change if -rectangle.height / 2 < int(
-                rectangle.y + y_change) <= display_height - rectangle.height / 2 else 0
+            rectangle.x += self._dx
+            rectangle.y += self._dy
+
+            if rectangle.x > display_width or rectangle.x < 0 or rectangle.y > display_height or rectangle.y < 0:
+                self._is_destroyed = True
+
+    def fire(self, dx, dy):
+        self._dx = dx
+        self._dy = dy
         self._change_direction(dx, dy)
+        self._is_fired = True
+
+    def reflect(self):
+        self._dx *= -1
+        self._dy *= -1
 
     def _change_direction(self, dx, dy):
         if abs(dx) > abs(dy):
