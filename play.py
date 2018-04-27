@@ -13,6 +13,50 @@ class Direction(object):
     DOWN = 4
 
 
+class Orientation(object):
+    HORIZONTAL = 1
+    VERTICAL = 0
+
+
+class Projectile(object):
+    def __init__(self, image_horizontal, image_vertical, orientation):
+        self._images = {Orientation.HORIZONTAL: image_horizontal, Orientation.VERTICAL: image_vertical}
+        self._rectangles = {Orientation.HORIZONTAL: image_horizontal.get_rect(),
+                            Orientation.VERTICAL: image_vertical.get_rect()}
+        self._orientation = orientation
+
+    @property
+    def image(self):
+        return self._images[self._orientation]
+
+    @property
+    def rectangle(self):
+        return self._rectangles[self._orientation]
+
+    @property
+    def orientation(self):
+        return self._orientation
+
+    def put(self, x, y):
+        for rectangle in self._rectangles.values():
+            rectangle.x = x
+            rectangle.y = y
+
+    def move(self, dx, dy):
+        for rectangle in self._rectangles.values():
+            rectangle.x += x_change if -rectangle.width / 2 < int(
+                rectangle.x + x_change) <= display_width - rectangle.width / 2 else 0
+            rectangle.y += y_change if -rectangle.height / 2 < int(
+                rectangle.y + y_change) <= display_height - rectangle.height / 2 else 0
+        self._change_direction(dx, dy)
+
+    def _change_direction(self, dx, dy):
+        if abs(dx) > abs(dy):
+            self._orientation = Orientation.HORIZONTAL
+        elif abs(dx) < abs(dy):
+            self._direction = Orientation.VERTICAL
+
+
 class Wall(object):
     def __init__(self, image):
         self._image = image
@@ -95,9 +139,9 @@ if __name__ == "__main__":
     character_left_img = pygame.transform.smoothscale(pygame.image.load("character_left.png"),
                                                       (int(display_width * 0.1), int(display_height * 0.2)))
     character_right_img = pygame.transform.smoothscale(pygame.image.load("character_right.png"),
-                                                      (int(display_width * 0.1), int(display_height * 0.2)))
+                                                       (int(display_width * 0.1), int(display_height * 0.2)))
     character_up_img = pygame.transform.smoothscale(pygame.image.load("character_up.png"),
-                                                      (int(display_width * 0.1), int(display_height * 0.2)))
+                                                    (int(display_width * 0.1), int(display_height * 0.2)))
     character_down_img = pygame.transform.smoothscale(pygame.image.load("character_down.png"),
                                                       (int(display_width * 0.1), int(display_height * 0.2)))
 
