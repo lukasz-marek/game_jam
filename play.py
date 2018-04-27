@@ -1,3 +1,6 @@
+from copy import deepcopy
+
+
 class Colour(object):
     BLACK = (0, 0, 0)
     WHITE = (255, 255, 255)
@@ -8,6 +11,24 @@ class Direction(object):
     RIGHT = 2
     UP = 3
     DOWN = 4
+
+
+class Wall(object):
+    def __init__(self, image):
+        self._image = image
+        self._rectangle = image.get_rect()
+
+    @property
+    def image(self):
+        return self._image
+
+    @property
+    def rectangle(self):
+        return self._rectangle
+
+    def put(self, x, y):
+        self._rectangle.x = x
+        self._rectangle.y = y
 
 
 class Character(object):
@@ -45,9 +66,16 @@ class Character(object):
 
     def _change_direction(self, dx, dy):
         if abs(dx) > abs(dy):
-            self._direction = Direction.UP if dx > 0 else Direction.DOWN
+            self._direction = Direction.RIGHT if dx > 0 else Direction.LEFT
         elif abs(dx) < abs(dy):
-            self._direction = Direction.RIGHT if dy > 0 else Direction.LEFT
+            self._direction = Direction.DOWN if dy > 0 else Direction.UP
+
+
+def is_move_allowed(character, obstacle, dx, dy):
+    character_rect = deepcopy(character.rectangle)
+    character_rect.x += dx
+    character_rect.y += dy
+    return not character_rect.colliderect(obstacle.rectangle)
 
 
 if __name__ == "__main__":
@@ -64,16 +92,22 @@ if __name__ == "__main__":
     GAME_DISPLAY.set_caption("Hack'n'Slash")
     clock = pygame.time.Clock()
 
-    idle_character = pygame.transform.smoothscale(pygame.image.load("character_idle.png"),
-                                                  (int(display_width * 0.2), int(display_height * 0.2)))
+    character_left_img = pygame.transform.smoothscale(pygame.image.load("character_left.png"),
+                                                      (int(display_width * 0.1), int(display_height * 0.2)))
+    character_right_img = pygame.transform.smoothscale(pygame.image.load("character_right.png"),
+                                                      (int(display_width * 0.1), int(display_height * 0.2)))
+    character_up_img = pygame.transform.smoothscale(pygame.image.load("character_up.png"),
+                                                      (int(display_width * 0.1), int(display_height * 0.2)))
+    character_down_img = pygame.transform.smoothscale(pygame.image.load("character_down.png"),
+                                                      (int(display_width * 0.1), int(display_height * 0.2)))
 
-    PLAYER = Character(idle_character, idle_character, idle_character, idle_character)
+    wall_img = pygame.transform.smoothscale(pygame.image.load("wall.png"),
+                                            (int(display_width * 0.2), int(display_height * 0.2)))
+
+    PLAYER = Character(character_up_img, character_down_img, character_left_img, character_right_img)
     PLAYER.put(display_width * 0.5, display_height * 0.5)
-
-
-    def character_idle_position(player):
-        SURFACE.blit(player.image, player.rectangle)
-
+    WALLS = [Wall(wall_img)]
+    WALLS[0].put(display_width * 0.2, display_height * 0.2)
 
     player_quit = False
     x_change = 0
@@ -105,10 +139,17 @@ if __name__ == "__main__":
                 elif event.key == pygame.K_UP or event.key == pygame.K_DOWN:
                     y_change = 0
 
-        PLAYER.move(x_change, y_change)
+        collision_detected = not all(map(lambda x: is_move_allowed(PLAYER, x, x_change, y_change), WALLS))
+
+        if not collision_detected:
+            PLAYER.move(x_change, y_change)
 
         SURFACE.fill(Colour.WHITE)
-        character_idle_position(PLAYER)
+        SURFACE.blit(PLAYER.image, PLAYER.rectangle)
+
+        for wall in WALLS:
+            SURFACE.blit(wall.image, wall.rectangle)
+
         pygame.display.update()
         clock.tick(60)
 
