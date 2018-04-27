@@ -44,9 +44,24 @@ class MapEvaluator(object):
 
     def evaluate(self, map):
         schema = map.schema
-        return MapEvaluator.ACCEPTABLE, self._compute_entropy(schema)
+        return MapEvaluator.ACCEPTABLE, self._compute_cumulated_entropy(schema), self._compute_entropy(schema)
 
     def _compute_entropy(self, schema):
+        walls = 0
+        roads = 0
+        for row in schema:
+            for brick in row:
+                if brick == Map.WALL:
+                    walls += 1
+                else:
+                    roads += 1
+
+        wall_probability = walls / (walls + roads)
+        road_probability = roads / (walls + roads)
+
+        return wall_probability * math.log(wall_probability, 2) + road_probability * math.log(road_probability, 2)
+
+    def _compute_cumulated_entropy(self, schema):
         entropy = 0
         for x in xrange(len(schema)):
             for y in xrange(len(schema[x])):
