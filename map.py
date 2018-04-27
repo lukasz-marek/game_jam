@@ -42,8 +42,8 @@ class MapEvaluator(object):
     def __init__(self):
         pass
 
-    def evaluate(self, map):
-        schema = map.schema
+    def evaluate(self, map_schema):
+        schema = map_schema.schema
         return MapEvaluator.ACCEPTABLE, self._compute_cumulated_entropy(schema), self._compute_entropy(schema)
 
     def _compute_entropy(self, schema):  # maximize
