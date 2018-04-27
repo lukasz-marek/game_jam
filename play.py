@@ -58,7 +58,7 @@ class Projectile(object):
             rectangle.x += self._dx if self.orientation == Orientation.HORIZONTAL else 0
             rectangle.y += self._dy if self.orientation == Orientation.VERTICAL else 0
 
-            if rectangle.x + rectangle.width/2 < 0 or rectangle.x + rectangle.width/2 > display_width or rectangle.y + rectangle.height/2 < 0 or rectangle.y + rectangle.height/2 > display_height:
+            if rectangle.x + rectangle.width / 2 < 0 or rectangle.x + rectangle.width / 2 > display_width or rectangle.y + rectangle.height / 2 < 0 or rectangle.y + rectangle.height / 2 > display_height:
                 self._is_destroyed = True
 
     def fire(self, dx, dy):
@@ -172,11 +172,24 @@ if __name__ == "__main__":
         projectile = Projectile(projectile_vertical, projectile_horizontal,
                                 Orientation.VERTICAL if character.direction in [Direction.UP,
                                                                                 Direction.DOWN] else Orientation.HORIZONTAL)
-        projectile.put(character.rectangle.x, character.rectangle.y)
+
+        offset_x, offset_y = _compute_projectile_offset(character)
+
+        projectile.put(character.rectangle.x + offset_x,
+                       character.rectangle.y + offset_y)
         projectile.fire(20 if character.direction == Direction.RIGHT else -20,
                         20 if character.direction == Direction.DOWN else -20)
         return projectile
 
+    def _compute_projectile_offset(character):
+        if character.direction == Direction.UP:
+            return character.rectangle.width/2, 0
+        elif character.direction == Direction.DOWN:
+            return character.rectangle.width/2, character.rectangle.height
+        elif character.direction == Direction.LEFT:
+            return 0, character.rectangle.height/2
+        elif character.direction == Direction.RIGHT:
+            return character.rectangle.width, character.rectangle.height/2
 
     PLAYER = Character(character_up_img, character_down_img, character_left_img, character_right_img)
     PLAYER.put(display_width * 0.5, display_height * 0.5)
