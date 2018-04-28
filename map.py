@@ -1,4 +1,5 @@
 import math
+import random
 
 
 class DataConverter(object):
@@ -85,3 +86,27 @@ class MapEvaluator(object):
 
         return wall_probability * (math.log(wall_probability, 2) if wall_probability > 0 else 0) + road_probability * (
             math.log(road_probability, 2) if road_probability > 0 else 0)
+
+
+class MapGenerator(object):
+
+    _WALL_FREQUENCY = 20
+
+    _OBJECT_TYPES = [Map.WALL] * _WALL_FREQUENCY + [Map.ROAD] * (100 - _WALL_FREQUENCY)
+
+    def __init__(self, converter, evaluator):
+        self._converter = converter
+        self._evaluator = evaluator
+
+    def generate(self):
+        subject = Map(self._converter)
+        for x in xrange(len(subject.schema)):
+            for y in xrange(len(subject.schema[x])):
+                subject.schema[x][y] = random.choice(MapGenerator._OBJECT_TYPES)
+
+
+
+
+
+
+
